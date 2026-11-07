@@ -39,7 +39,8 @@ pipeline {
             steps {
                 dir('Ansible') {
                     withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
-                    sh 'ansible-playbook -i hosts.ini deploy.yml'
+                        sh 'ansible-playbook -i hosts.ini deploy.yml --private-key ~/.ssh/Devlog.pem -u ec2-user'
+                    }
                 }
             }
         }
