@@ -13,6 +13,7 @@
           - curl
           - wget
         state: present
+        allowerasing: yes
 
     - name: Install Python3 and pip (Amazon Linux 2023 comes with python3, but let's ensure)
       dnf:
