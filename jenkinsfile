@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Terraform Provision') {
+            steps {
+                dir('Terraform') {
+                    withCredentials([
+                        string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve'
+                    }
+                }
+            }
+        }
+        
+        stage('Prepare SSH Key') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'devlog-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                    sh '''
+                        mkdir -p ~/.ssh
+                        cp $SSH_KEY ~/.ssh/Devlog.pem
+                        chmod 600 ~/.ssh/Devlog.pem
+                    '''
+                }
+            }
+        }
+        
+        stage('Run Ansible Deploy') {
+            steps {
+                dir('Ansible') {
+                    sh 'ansible-playbook -i hosts.ini deploy.yml'
+                }
+            }
+        }
+    }
+    
+    post {
+        failure {
+            echo 'Pipeline failed! Check logs for details.'
+        }
+    }
+}
