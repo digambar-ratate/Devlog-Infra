@@ -15,7 +15,7 @@
         state: present
         allowerasing: yes
 
-    - name: Install Python3 and pip (Amazon Linux 2023 comes with python3, but let's ensure)
+    - name: Install Python3 and pip
       dnf:
         name:
           - python3
@@ -34,10 +34,11 @@
         name: docker
         state: present
 
-    - name: Install Docker Compose plugin
-      dnf:
-        name: docker-compose-plugin
-        state: present
+    - name: Download and install Docker Compose binary
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
 
     - name: Ensure Docker service is started and enabled
       service:
