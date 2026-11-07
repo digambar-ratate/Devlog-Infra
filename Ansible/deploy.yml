@@ -60,6 +60,6 @@
         force: yes
 
     - name: Start Docker Compose stack on remote server
-      command: docker compose up --build -d
+      command: docker-compose up --build -d
       args:
         chdir: /opt/devlog
