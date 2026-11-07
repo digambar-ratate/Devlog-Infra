@@ -1,0 +1,47 @@
+---
+- hosts: devlog_servers
+  become: yes
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Python3, Git, and basic prerequisites
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - git
+          - curl
+        state: pres
+    - name: Install Node.js (e.g., Node.js 20.x LTS)
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+      args:
+        executable: /bin/bash
+
+    - name: Install Docker and Docker Compose v2
+      apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+
+    - name: Ensure Docker service is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Clone or sync application repository
+      git:
+        repo: 'https://github.com/digambar-ratate/devlog-Docker-.git'
+        dest: /opt/devlog
+        version: main
+        force: yes
+
+    - name: Start Docker Compose stack on remote server
+      command: docker compose up --build -d
+      args:
+        chdir: /opt/devlog
