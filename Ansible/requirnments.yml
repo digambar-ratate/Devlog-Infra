@@ -2,30 +2,39 @@
 - hosts: devlog_servers
   become: yes
   tasks:
-    - name: Update apt package cache
-      apt:
+    - name: Ensure DNF cache is updated
+      dnf:
         update_cache: yes
 
-    - name: Install Python3, Git, and basic prerequisites
-      apt:
+    - name: Install Git, curl, and basic prerequisites
+      dnf:
+        name:
+          - git
+          - curl
+        state: present
+
+    - name: Install Python3 and pip (Amazon Linux 2023 comes with python3, but let's ensure)
+      dnf:
         name:
           - python3
           - python3-pip
-          - git
-          - curl
-        state: pres
-    - name: Install Node.js (e.g., Node.js 20.x LTS)
+        state: present
+
+    - name: Install Node.js 20.x LTS using NodeSource setup script
       shell: |
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt-get install -y nodejs
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+        dnf install -y nodejs
       args:
         executable: /bin/bash
 
-    - name: Install Docker and Docker Compose v2
-      apt:
-        name:
-          - docker.io
-          - docker-compose-v2
+    - name: Install Docker on Amazon Linux 2023
+      dnf:
+        name: docker
+        state: present
+
+    - name: Install Docker Compose plugin
+      dnf:
+        name: docker-compose-plugin
         state: present
 
     - name: Ensure Docker service is started and enabled
@@ -33,6 +42,12 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: Add ec2-user to the docker group so you don't need sudo for docker commands
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
 
     - name: Clone or sync application repository
       git:
